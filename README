@@ -1,3 +1,13 @@
-README
 
-EntraTest repo
+Python script to load userEmail's from .xlsx file, and if they exist on Entra, add to specified groups
+
+1. Register app on Entra to act as endpoint for Graph API
+2. Give API permissions to this app for Directory.readwrite.all (or narrow down exact permissions)
+3. Create client secret in app, then copy and load [client ID, tenant ID, and client secret] variables from app into shell environment
+2. Install python (usually comes with pip) if necessary
+
+Navigate to target directory in shell, then run:
+git clone https://github.com/rbandi7/EntraTest
+pip install openpyxl
+
+Usage: python EntraTest.py [path to .xlsx file containing users (we skip first row)] \[GroupName1\] \[GroupName2\] \[etc.\]
