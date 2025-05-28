@@ -10,4 +10,4 @@ Navigate to target directory in shell, then run:
 git clone https://github.com/rbandi7/EntraTest
 pip install openpyxl
 
-Usage: python EntraTest.py [path to .xlsx file containing users (we skip first row)] \[GroupName1\] \[GroupName2\] \[etc.\]
+Usage: python EntraTest.py [path to .xlsx file containing users (we skip first row)] [GroupName1] [GroupName2] [etc.]
