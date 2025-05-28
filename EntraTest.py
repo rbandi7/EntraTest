@@ -6,8 +6,8 @@ import openpyxl
 import sys
 
 CLIENT_ID = os.environ.get('ENTRACLIENTID')
-CLIENT_SECRET = os.environ.get('ENTRACLIENTSECRET')
 TENANT_ID = os.environ.get('ENTRATENANTID')
+CLIENT_SECRET = os.environ.get('ENTRACLIENTSECRET')
 SCOPES = ["https://graph.microsoft.com/.default"]
 AUTHORITY = f'https://login.microsoftonline.com/{TENANT_ID}'
 GRAPH_API_USERS_URL = "https://graph.microsoft.com/v1.0/users?$select=id,displayName,userPrincipalName,accountEnabled"
@@ -97,7 +97,7 @@ def main():
             for targetGroupName in targetGroups:
                 groupID = checkGroupExists(groups, targetGroupName)
                 if(groupID != -1): 
-                    print(f"Adding to {targetGroupName}:")
+                    print(f"\nAdding to {targetGroupName}:")
                     for xlsx_user in xlsx_users: addUserToGroup(access_token, users, xlsx_user, targetGroupName, groupID)
                 else: print(f"\n{targetGroupName}: exists in Entra: False")
         else: print("Either users or groups not found.")

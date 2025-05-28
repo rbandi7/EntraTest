@@ -2,8 +2,9 @@
 Python script to load userEmail's from .xlsx file, and if they exist on Entra, add to specified groups
 
 1. Register app on Entra to act as endpoint for Graph API
-2. Give API permissions to this app for Directory.readwrite.all (or narrow down exact permissions)
-3. Create client secret in app, then copy and load [client ID, tenant ID, and client secret] variables from app into shell environment
+2. Give API permissions to this app choosing Graph API -> Application -> Directory.readwrite.all (or narrow down exact permissions), and click "grant admin consent"
+3. Create client secret in app, then copy and load [client ID, tenant ID, and _value_ of client secret] variables from app into shell environment,
+ naming them as ENTRACLIENTID, ENTRATENANTID, and ENTRACLIENTSECRET
 2. Install python (usually comes with pip) if necessary
 
 Navigate to target directory in shell, then run:
