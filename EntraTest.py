@@ -10,8 +10,6 @@ TENANT_ID = os.environ.get('ENTRATENANTID')
 CLIENT_SECRET = os.environ.get('ENTRACLIENTSECRET')
 SCOPES = ["https://graph.microsoft.com/.default"]
 AUTHORITY = f'https://login.microsoftonline.com/{TENANT_ID}'
-GRAPH_API_USERS_URL = "https://graph.microsoft.com/v1.0/users?$select=id,displayName,userPrincipalName,accountEnabled"
-GRAPH_API_GROUPS_URL = "https://graph.microsoft.com/v1.0/groups?$select=id,displayName"
 
 xlssPath = sys.argv[1]
 targetGroups = sys.argv[2:]
@@ -41,7 +39,8 @@ def get_access_token():
 
 def fetch_users(access_token):
     headers = {'Authorization': f'Bearer {access_token}'}
-    response = requests.get(GRAPH_API_USERS_URL, headers=headers)
+    url = "https://graph.microsoft.com/v1.0/users?$select=id,displayName,userPrincipalName,accountEnabled"
+    response = requests.get(url, headers=headers)
     if response.status_code == 200:
         users = response.json()
         return users.get('value', [])
@@ -51,7 +50,8 @@ def fetch_users(access_token):
     
 def fetch_groups(access_token):
     headers = {'Authorization': f'Bearer {access_token}'}
-    response = requests.get(GRAPH_API_GROUPS_URL, headers=headers)
+    url = "https://graph.microsoft.com/v1.0/groups?$select=id,displayName"
+    response = requests.get(url, headers=headers)
     if response.status_code == 200:
         users = response.json()
         return users.get('value', [])
@@ -82,6 +82,85 @@ def add_user_to_group(access_token, userID, groupID):
         print(f"Error adding user to group ({groupID}): {response.status_code} - {response.text}")
         return False
 
+def remove_user_from_group(access_token, userID, groupID):
+    headers = {'Authorization': f'Bearer {access_token}','Content-Type': 'application/json'}
+    url = f"https://graph.microsoft.com/v1.0/groups/{groupID}/members/{userID}/$ref"
+    response = requests.delete(url, headers=headers)
+    if response.status_code == 204:
+        print(f"Successfully added user ({userID}) to group ({groupID}).")
+        return True
+    else:
+        print(f"Error adding user to group ({groupID}): {response.status_code} - {response.text}")
+        return False
+        
+def enable_user_account(access_token, userID):
+    headers = {'Authorization': f'Bearer {access_token}', 'Content-Type': 'application/json'}
+    url = f"https://graph.microsoft.com/v1.0/users/{user_id}"
+    data = {"accountEnabled": True}
+    response = requests.patch(url, headers=headers, json=data)
+    if response.status_code == 204:
+        print(f"Successfully re-enabled user ({userID})")
+        return True
+    else:
+        print(f"Error re-enabling user ({userID})")
+        return False
+
+def disable_user_account(access_token,userID):
+    headers = {'Authorization': f'Bearer {access_token}', 'Content-Type': 'application/json'}
+    url = f"https://graph.microsoft.com/v1.0/users/{user_id}"
+    data = {"accountEnabled": False}
+    response = requests.patch(url, headers=headers, json=data)
+    if response.status_code == 204:
+        print(f"Successfully disabled user ({userID})")
+        return True
+    else:
+        print(f"Error disabling user ({userID})")
+        return False
+
+def get_auth_methods(access_token, user_id):
+    headers = {'Authorization': f'Bearer {access_token}'}
+    url = f"https://graph.microsoft.com/v1.0/users/{user_id}/authentication/methods"
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        methods = response.json().get('value', [])
+        usable = []
+        non_usable = []
+        for method in methods:
+            if method['@odata.type'] == "#microsoft.graph.emailAuthenticationMethod": usable.append(method)
+            else: non_usable.append(method)
+        return usable, non_usable
+    else:
+        print("Failed to get auth methods:", response.status_code, response.text)
+        return [], []
+
+def remove_email_from_nonusable(access_token, non_usable_methods):
+    headers = {'Authorization': f'Bearer {access_token}'}
+    removed = False
+    for method in non_usable_methods:
+        if method['@odata.type'] == "#microsoft.graph.emailAuthenticationMethod":
+            method_id = method['id']
+            user_id = method['id'].split('/')[0]  # Might need adjustment based on actual ID format
+            url = f"https://graph.microsoft.com/v1.0/users/{user_id}/authentication/emailMethods/{method_id}"
+            response = requests.delete(url, headers=headers)
+            if response.status_code == 204:
+                print("Removed email method:", method_id)
+                removed = True
+            else:
+                print("Failed to remove:", response.status_code, response.text)
+    return removed
+
+def add_email_to_usable(access_token, user_id, email_address):
+    headers = {'Authorization': f'Bearer {access_token}','Content-Type': 'application/json'}
+    data = {"emailAddress": email_address}
+    url = f"https://graph.microsoft.com/v1.0/users/{user_id}/authentication/emailMethods"
+    response = requests.post(url, headers=headers, json=data)
+    if response.status_code == 201:
+        print("Successfully added usable email method.")
+        return True
+    else:
+        print("Failed to add email method:", response.status_code, response.text)
+        return False
+    
 def main():
     access_token = get_access_token()
     xlsx_users = parse_xlsx_users(xlssPath)[1:]
